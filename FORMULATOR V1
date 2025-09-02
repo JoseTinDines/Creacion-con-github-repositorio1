@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>FORMULATOR JoseMask V1</title>
+<style>
+body { font-family: 'Helvetica', sans-serif; margin:0; background:#f5f3f0; color:#3a2f25; }
+header { text-align:center; padding:1rem; background:#fff8f0; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
+h1 { margin:0; font-size:2rem; }
+h2 { margin:0.2rem 0; font-weight:400; font-size:1rem; color:#8b7b6b; }
+.container { display:flex; margin:1rem; gap:1rem; }
+.left-panel, .right-panel { width:25%; background:#fff; padding:1rem; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.05); height:80vh; overflow-y:auto;}
+.center-panel { width:50%; background:#fff; padding:1rem; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.05); height:80vh; overflow:auto;}
+.botella { width:50px; height:100px; margin:0.5rem; border-radius:10px; display:inline-block; vertical-align:top; opacity:0.5; cursor:pointer; transition:0.5s;}
+#modalBroma {position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:1000;}
+#modalBroma div {background:#fff4e6; border:2px solid #3a2f25; border-radius:15px; padding:2rem; text-align:center; width:300px;}
+button { background:#4a3723; color:#f5f0e6; border:none; padding:0.8rem 1.5rem; border-radius:8px; cursor:pointer; margin-top:1rem;}
+.slider { width:100%; margin:0.5rem 0;}
+.mapaAromaticos div {margin-bottom:0.3rem;}
+.alertaIFRA { font-weight:bold; margin-top:0.5rem; }
+</style>
+</head>
+<body>
+
+<header>
+<h1>FORMULATOR JoseMask V1</h1>
+<h2>MAISON TinDines FreeLance Parfums</h2>
+</header>
+
+<div class="container">
+  <div class="left-panel">
+    <h3>Biblioteca de Ingredientes</h3>
+    <div id="ingredientes"></div>
+    <button id="addIngrediente">Agregar Ingrediente Ejemplo</button>
+  </div>
+
+  <div class="center-panel">
+    <h3>Órgano Olfativo / Fórmula</h3>
+    <div id="organVisual"></div>
+    <h4>Fórmula en tiempo real:</h4>
+    <ul id="formulaLista"></ul>
+    
+    <h3>Mapa Aromático Interactivo</h3>
+    <div class="mapaAromaticos">
+      <div>Cítricos <span id="valCitrico">0</span>/100</div>
+      <div style="background:#eee; border-radius:10px; height:20px;"><div id="barCitrico" style="height:100%; width:0%; background:#FFD966; border-radius:10px;"></div></div>
+      <div>Florales <span id="valFloral">0</span>/100</div>
+      <div style="background:#eee; border-radius:10px; height:20px;"><div id="barFloral" style="height:100%; width:0%; background:#F2B8A0; border-radius:10px;"></div></div>
+      <div>Amaderados <span id="valAmaderado">0</span>/100</div>
+      <div style="background:#eee; border-radius:10px; height:20px;"><div id="barAmaderado" style="height:100%; width:0%; background:#D6C3B0; border-radius:10px;"></div></div>
+      <div>Especiados <span id="valEspeciado">0</span>/100</div>
+      <div style="background:#eee; border-radius:10px; height:20px;"><div id="barEspeciado" style="height:100%; width:0%; background:#F4A261; border-radius:10px;"></div></div>
+      <div>Almizcles/Base <span id="valBase">0</span>/100</div>
+      <div style="background:#eee; border-radius:10px; height:20px;"><div id="barBase" style="height:100%; width:0%; background:#A8D5BA; border-radius:10px;"></div></div>
+    </div>
+
+    <h3>Seguridad IFRA</h3>
+    <div id="panelIFRA">
+      <p class="alertaIFRA">Estado de seguridad: Ningún ingrediente agregado</p>
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <h3>Modulaciones / Efectos</h3>
+    <div>Brillo <input type="range" min="1" max="10" value="5" class="slider" id="brillo"></div>
+    <div>Profundidad <input type="range" min="1" max="10" value="5" class="slider" id="profundidad"></div>
+    <div>Redondez <input type="range" min="1" max="10" value="5" class="slider" id="redondez"></div>
+    <div>Fijación <input type="range" min="1" max="10" value="5" class="slider" id="fijacion"></div>
+    <div>Transparencia <input type="range" min="1" max="10" value="5" class="slider" id="transparencia"></div>
+    <div>Cuerpo <input type="range" min="1" max="10" value="5" class="slider" id="cuerpo"></div>
+    <div>Armonía <input type="range" min="1" max="10" value="5" class="slider" id="armonia"></div>
+    <div>Calidez <input type="range" min="1" max="10" value="5" class="slider" id="calidez"></div>
+    <div>Bruma <input type="range" min="1" max="10" value="5" class="slider" id="bruma"></div>
+    <div>Textura <input type="range" min="1" max="10" value="5" class="slider" id="textura"></div>
+  </div>
+</div>
+
+<!-- Modal Premium / Gag -->
+<div id="modalBroma">
+  <div>
+    <h2>🔒 Función Premium</h2>
+    <p>¡Es broma! 😂<br>No te vamos a sacar el dinero por algo que tienes disponible gratis.</p>
+    <button id="desbloquear">CONGRATULATIONS 🎉</button>
+  </div>
+</div>
+
+<script>
+// Datos iniciales
+let ingredientes = [];
+let formula = [];
+let mapaAromas = {citrico:0, floral:0, amaderado:0, especiado:0, base:0};
+const colorPerfil = {top:"#A8D5BA", heart:"#F2B8A0", base:"#D6C3B0"};
+const familiaIngrediente = {"Bergamota":"citrico","Rosa":"floral","Musk":"base","Canela":"especiado","Cedro":"amaderado"};
+const ifraMax = {"Bergamota":10,"Rosa":5,"Musk":15,"Canela":3,"Cedro":8}; // % máximo ficticio
+
+// Función agregar ingrediente ejemplo
+document.getElementById("addIngrediente").addEventListener("click", ()=>{
+  const nombre = prompt("Nombre del ingrediente","Bergamota");
+  const tipo = prompt("Tipo top/heart/base","top");
+  const intensidad = parseFloat(prompt("Intensidad 0-100","10"));
+  const familia = familiaIngrediente[nombre] || "citrico";
+  const botella = document.createElement("div");
+  botella.classList.add("botella");
+  botella.dataset.nombre = nombre;
+  botella.dataset.tipo = tipo;
+  botella.dataset.familia = familia;
+  botella.dataset.intensidad = intensidad;
+  botella.style.background = colorPerfil[tipo];
+  document.getElementById("ingredientes").appendChild(botella);
+  
+  botella.addEventListener("click", ()=>{
+    agregarAFórmula({nombre,tipo,familia,intensidad});
+    actualizarMapa(nombre,intensidad);
+    actualizarIFRA(nombre);
+    botella.style.opacity="1";
+  });
+});
+
+// Función agregar a fórmula
+function agregarAFórmula(ing){
+  formula.push(ing);
+  const lista = document.getElementById("formulaLista");
+  lista.innerHTML="";
+  formula.forEach(i=>{
+    const li = document.createElement("li");
+    li.textContent=`${i.nombre} - ${i.tipo} - ${i.intensidad}`;
+    lista.appendChild(li);
+  });
+}
+
+// Función actualizar mapa aromático
+function actualizarMapa(nombre,valor){
+  const familia = familiaIngrediente[nombre] || "citrico";
+  mapaAromas[familia]+=valor;
+  if(mapaAromas[familia]>100) mapaAromas[familia]=100;
+  const bar = document.getElementById("bar"+familia.charAt(0).toUpperCase()+familia.slice(1));
+  const val = document.getElementById("val"+familia.charAt(0).toUpperCase()+familia.slice(1));
+  bar.style.width = mapaAromas[familia]+"%";
+  val.textContent = mapaAromas[familia].toFixed(1);
+}
+
+// Función actualizar panel IFRA
+function actualizarIFRA(nombre){
+  const total = formula.filter(i=>i.nombre===nombre).reduce((acc,i)=>acc+i.intensidad,0);
+  const max = ifraMax[nombre] || 100;
+  const panel = document.getElementById("panelIFRA");
+  let estado="", color="green";
+  if(total>max) {estado=`⚠️ ${nombre} excede límite IFRA (${total}% > ${max}%)`; color="red";}
+  else if(total>(0.8*max)) {estado=`⚠️ ${nombre} cerca del límite IFRA (${total}% > ${max*0.8}%)`; color="orange";}
+  else {estado=`✅ ${nombre} dentro del límite IFRA (${total}% ≤ ${max}%)`; color="green";}
+  panel.innerHTML=`<p class="alertaIFRA" style="color:${color}">${estado}</p>`;
+}
+
+// Modal premium / desbloqueo
+document.getElementById("desbloquear").addEventListener("click", ()=>{
+  document.getElementById("modalBroma").style.display="none";
+  alert("🎉 Todas las funciones desbloqueadas! Disfruta de tu estudio de perfumería virtual completo 😎");
+});
+</script>
+</body>
+</html>
